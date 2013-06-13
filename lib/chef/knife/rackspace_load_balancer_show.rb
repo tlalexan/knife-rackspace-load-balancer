@@ -47,12 +47,16 @@ module KnifePlugins
           vip_list << vip[:ipVersion].to_s
         end
 
-        if config[:print_ssl]
-          if ssl = load_balancer.ssl
-            ssl_info = {
-              :certificate => ssl.certificate,
-              :private_key => ssl.privatekey
-            }
+        if ssl = load_balancer.ssl
+          pem = OpenSSL::X509::Certificate.new(ssl.certificate)
+          ssl_info = {
+            :subject => pem.subject,
+            :issuer => pem.issuer,
+            :expires_at => pem.not_after
+          }
+          if config[:print_ssl]
+            ssl_info[:certificate] = "#{ssl.certificate[0..300]} ..."
+            ssl_info[:private_key] = "#{ssl.privatekey[0..300]} ..."
           end
         end
 
@@ -83,6 +87,7 @@ module KnifePlugins
         ui.output("\n")
         ui.output(ui.list(vip_list, :columns_across, 3))
         ui.output(ui.list(node_list, :columns_across, 5))
+        ui.output(ui.color("SSL information"))
         ui.output(format_for_display(ssl_info))
       end
     end
