@@ -33,7 +33,7 @@ module KnifePlugins
         load_balancer_list << ui.color(load_balancer[:status].to_s, load_balancer[:status] == "ACTIVE" ? :green : :red)
       end
 
-      puts ui.list(load_balancer_list, :columns_across, 6)
+      puts ui.list(load_balancer_list, :uneven_columns_across, 6)
     end
   end
 end
