@@ -17,6 +17,10 @@ module KnifePlugins
       :long => "--resolve-node-names",
       :description => "Resolve node names against chef server"
 
+    option :print_ssl,
+      :long => "--print-ssl",
+      :description => "Print certificate and key"
+
     def run
       @name_args.each do |load_balancer_id|
         load_balancer = lb_connection.get_load_balancer(load_balancer_id)
@@ -27,7 +31,8 @@ module KnifePlugins
           :id => load_balancer.id,
           :protocol => load_balancer.protocol,
           :port => load_balancer.port,
-          :status => ui.color(load_balancer.status, load_balancer.status == "ACTIVE" ? :green : :red)
+          :status => ui.color(load_balancer.status, load_balancer.status == "ACTIVE" ? :green : :red),
+          :ssl_termination => load_balancer.has_ssl_termination?
         }
 
         vip_list = [
@@ -40,6 +45,15 @@ module KnifePlugins
           vip_list << vip[:address].to_s
           vip_list << vip[:id].to_s
           vip_list << vip[:ipVersion].to_s
+        end
+
+        if config[:print_ssl]
+          if ssl = load_balancer.ssl
+            ssl_info = {
+              :certificate => ssl.certificate,
+              :private_key => ssl.privatekey
+            }
+          end
         end
 
         node_list = [
@@ -69,6 +83,7 @@ module KnifePlugins
         ui.output("\n")
         ui.output(ui.list(vip_list, :columns_across, 3))
         ui.output(ui.list(node_list, :columns_across, 5))
+        ui.output(format_for_display(ssl_info))
       end
     end
   end
