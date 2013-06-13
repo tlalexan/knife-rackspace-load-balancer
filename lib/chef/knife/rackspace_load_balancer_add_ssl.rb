@@ -14,6 +14,11 @@ module KnifePlugins
       :description => "The port you want the balancer to listen to",
       :default => 443
 
+    option :data_bag_name,
+      :long => "--data-bag-name BAG",
+      :description => "The name of the data bag you story ssl credentials in",
+      :default => "ssl"
+
     def run
       if @name_args.size < 2
         ui.fatal("Must provide lb_id and certifiate")
@@ -22,24 +27,17 @@ module KnifePlugins
       end
 
       lb_id, cert_name = @name_args
-
-      certs = Chef::Search::Query.new.search(:certs, "id:#{cert_name}")
-      if certs[0].empty?
-        ui.fatal("can't find #{cert_name} in data bags certs")
+      data_bag_name = config[:data_bag_name].to_sym
+      ssl = Chef::Search::Query.new.search(data_bag_name, "id:#{cert_name}")
+      if ssl[0].empty?
+        ui.fatal("can't find #{cert_name} in data bags ssl")
         exit 1
       end
-
-      keys = Chef::Search::Query.new.search(:keys, "id:#{cert_name}")
-      if keys[0].empty?
-        ui.fatal("can't find #{cert_name} in data bags keys")
-        exit 1
-      end
-
-      ssl_data = {
-        :certificate => certs[0][0]['contents'],
-        :privatekey => keys[0][0]['contents'],
-        :securePort => config[:port]
-      }
+      ssl_data = ssl[0][0].to_hash
+      ssl_data[:securePort] = config[:port] 
+      ssl_data.delete(:chef_type)
+      ssl_data.delete(:data_bag)
+      ssl_data.delete(:id)
 
       load_balancer = CloudLB::Balancer.new(lb_connection, lb_id)
       load_balancer.create_ssl_termination(ssl_data)
