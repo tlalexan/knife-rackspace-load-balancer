@@ -32,7 +32,7 @@ module KnifePlugins
           :protocol => load_balancer.protocol,
           :port => load_balancer.port,
           :status => ui.color(load_balancer.status, load_balancer.status == "ACTIVE" ? :green : :red),
-          :ssl_termination => load_balancer.has_ssl_termination?
+          :ssl_termination => load_balancer.ssl_termination?
         }
 
         vip_list = [
