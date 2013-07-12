@@ -12,7 +12,7 @@ Gem::Specification.new do |s|
   s.licenses = ["MIT"]
   s.files = `git ls-files`.split("\n")
   s.add_dependency "chef", ">= 0.10.8"
-  s.add_dependency "knife-rackspace", "~> 0.7.0"
+  s.add_dependency "knife-rackspace", "~> 0.8.0"
   s.add_dependency "cloudlb", "~> 0.1.0"
   s.add_dependency "typhoeus", "~> 0.6.3"
   s.require_paths = ["lib"]

@@ -3,18 +3,21 @@ class Chef
     module RackspaceLoadBalancerBase
       def self.included(base)
         base.class_eval do
-          option :rackspace_api_region,
-            :short => "-R REGION",
-            :long => "--rackspace-api-region REGION",
-            :description => "Your rackspace API region. IE: ord, dfw",
-            :proc => Proc.new {|region| Chef::Config[:knife][:rackspace_api_region] = region}
+          option :rackspace_region,
+            :long => "--rackspace-region REGION",
+            :description => "Your rackspace region",
+            :default => "dfw",
+            :proc => Proc.new { |region| Chef::Config[:knife][:rackspace_region] = region }
         end
       end
       def rackspace_api_credentials
+        Chef::Log.debug("rackspace_api_username #{Chef::Config[:knife][:rackspace_api_username]}")
+        Chef::Log.debug("rackspace_api_key #{Chef::Config[:knife][:rackspace_api_key]}")
+        Chef::Log.debug("rackspace_region #{Chef::Config[:knife][:rackspace_region]}")
         {
           :username => Chef::Config[:knife][:rackspace_api_username],
           :api_key => Chef::Config[:knife][:rackspace_api_key],
-          :region => Chef::Config[:knife][:rackspace_api_region]
+          :region => Chef::Config[:knife][:rackspace_region]
         }
       end
 
