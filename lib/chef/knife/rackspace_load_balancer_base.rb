@@ -24,6 +24,13 @@ class Chef
       def lb_connection
         @lb_connection ||= CloudLB::Connection.new(rackspace_api_credentials)
       end
+
+      def public_ip(load_balancer)
+        load_balancer.virtual_ips.find{|vip| vip[:type]=='PUBLIC'}[:address]
+      end
+
     end
+
+
   end
 end

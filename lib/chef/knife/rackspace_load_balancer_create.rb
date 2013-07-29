@@ -2,11 +2,13 @@ require 'chef/knife'
 require 'chef/knife/rackspace_base'
 require 'chef/knife/rackspace_load_balancer_base'
 require 'chef/knife/rackspace_load_balancer_nodes'
+require 'chef/knife/rackspace_dns_base'
 require 'cloudlb'
 
 module KnifePlugins
   class RackspaceLoadBalancerCreate < Chef::Knife
     include Chef::Knife::RackspaceBase
+    include Chef::Knife::RackspaceDnsBase
     include Chef::Knife::RackspaceLoadBalancerBase
     include Chef::Knife::RackspaceLoadBalancerNodes
 
@@ -55,7 +57,7 @@ module KnifePlugins
 
     option :algorithm,
       :long => "--algorithm ALGORITHM",
-      :description => "The algorithm to employ for load balancing [Defualt: RANDOM]",
+      :description => "The algorithm to employ for load balancing [Default: RANDOM]",
       :default => "RANDOM"
 
     option :virtual_ip_ids,
@@ -66,6 +68,12 @@ module KnifePlugins
       :long => "--virtual-ip-type TYPE",
       :description => "Type of virtual IP to obtain [DEFAULT: PUBLIC]",
       :default => "PUBLIC"
+
+    option :fqdn,
+      :long => "-add-fqdn FQDN",
+      :short => "-D FQDN",
+      :description => "Creates an 'A' record in Cloud DNS",
+      :default => ""
 
 
 
@@ -116,9 +124,26 @@ module KnifePlugins
         ui.confirm("Do you really want to create this load balancer")
       end
 
-      load_balancer_id = lb_connection.create_load_balancer(load_balancer_configuration)
+      load_balancer = lb_connection.create_load_balancer(load_balancer_configuration)
 
       ui.output(ui.color("Created load balancer #{@name_args.first}", :green))
+
+      if (config[:fqdn])
+        fqdn = config[:fqdn]
+        
+        zone = zone_for fqdn
+
+        if !zone
+          ui.error("Could not find Rackspace DNS zone for '#{zone_name}'")
+          exit 1 
+        end
+        
+        zone.records.create(:type => 'A', :name => fqdn, :value => public_ip(load_balancer))
+        msg_pair("DNS", fqdn)
+        msg_pair("IP", public_ip(load_balancer))
+      end
+
     end
+
   end
 end
