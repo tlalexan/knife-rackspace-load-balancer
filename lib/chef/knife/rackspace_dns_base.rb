@@ -16,9 +16,7 @@ class Chef
         end
         
         zone_name = parts.count > fqdn_min_size ? three_parts_zone_name(parts) : two_parts_zone_name(parts) 
-        msg_pair("Zone_name", zone_name)
         zone = dns_service.zones.find {|z| z.domain == zone_name }  
-        msg_pair("Zone", zone)
         zone
       end
 
