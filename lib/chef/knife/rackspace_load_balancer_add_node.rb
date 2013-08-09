@@ -28,6 +28,10 @@ module KnifePlugins
       :long => "--only \"ID[,ID]\"",
       :description => "Comma deliminated list of load balancer ids to add to"
 
+    option :only_by_name,
+      :long => "--only-by-name \"LBNAME[,LBNAME]\"",
+      :description => "Comma deliminated list of load balancer names to add to"
+
     option :port,
       :long => "--port PORT",
       :description => "Add node listening to this port [DEFAULT: 80]",
@@ -60,7 +64,7 @@ module KnifePlugins
       :description => "Auto resolve port of node addition"
 
     def run
-      unless [:all, :except, :only].any? {|target| not config[target].nil?}
+      unless [:all, :except, :only, :only_by_name].any? {|target| not config[target].nil?}
         ui.fatal("Must provide a target set of load balancers with --all, --except, or --only")
         show_usage
         exit 1
@@ -97,6 +101,11 @@ module KnifePlugins
       if config[:only]
         only = config[:only].split(",").map(&:to_s)
         target_load_balancers = target_load_balancers.select {|lb| only.include? lb[:id].to_s}
+      end
+
+      if config[:only_by_name]
+        only = config[:only_by_name].split(",").map(&:to_s)
+        target_load_balancers = target_load_balancers.select {|lb| only.include? lb[:name].to_s}
       end
 
       if config[:except]
